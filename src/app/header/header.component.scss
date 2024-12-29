@@ -1,0 +1,8 @@
+:host(app-header) {
+  @apply w-full;
+}
+
+header {
+  @apply h-[20vh] text-white bg-slate-500 flex justify-center items-center p-4;
+  font-size: var(--step-3);
+}

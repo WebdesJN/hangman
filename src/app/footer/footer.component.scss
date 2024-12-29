@@ -1,0 +1,8 @@
+:host(app-footer) {
+  @apply w-full;
+}
+
+footer {
+  @apply flex justify-center items-center h-[7.5vh] bg-slate-500 text-white;
+  font-size: var(--step-2);
+}

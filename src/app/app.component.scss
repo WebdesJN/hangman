@@ -1,0 +1,15 @@
+:host(app-root) {
+  @apply flex xl:flex-col flex-wrap;
+}
+
+.green {
+  @apply text-green-400;
+}
+
+section {
+  @apply flex flex-row content-start mx-auto flex-wrap w-2/12 py-8 dark:text-white;
+  p {
+    @apply w-full h-fit text-center;
+    font-size: var(--step-0);
+  }
+}

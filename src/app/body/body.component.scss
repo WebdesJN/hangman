@@ -1,0 +1,65 @@
+:host(app-body) {
+  @apply flex-grow xl:max-w-[66.6666%];
+}
+
+main {
+  @apply grid grid-cols-12 gap-4 m-auto justify-items-center items-center lg:px-10;
+}
+
+.errorState {
+  @apply relative col-span-12 row-span-3 lg:col-start-8 lg:col-end-13 lg:row-start-1 lg:row-end-2 h-[294px] w-[285px] self-start;
+  img {
+    &.first {
+      @apply z-10 absolute;
+    }
+    &.second {
+      @apply z-20 absolute;
+    }
+    &.third {
+      @apply z-30 absolute;
+    }
+    &.fourth {
+      @apply z-40 absolute;
+    }
+    &.fifth {
+      @apply z-50 absolute;
+    }
+    &.sixth {
+      @apply z-[60] absolute;
+    }
+  }
+}
+
+.letters {
+  @apply self-start lg:grid-cols-11 lg:grid-rows-3 grid-cols-8 col-span-12 row-start-1 row-end-2 lg:col-start-1 lg:col-end-7 m-auto w-full px-2;
+  button {
+    @apply sm:px-5 w-full text-center;
+    font-size: var(--step-1);
+  }
+}
+
+.scratch {
+  text-decoration: line-through;
+  text-decoration-color: red;
+  text-decoration-style: wavy;
+  opacity: 0.5;
+}
+
+.roomId {
+  @apply col-span-12 h-fit row-start-3 row-end-4 self-start;
+}
+
+.success {
+  @apply col-span-12 row-start-2 row-end-3 flex flex-wrap gap-2 md:gap-5 w-11/12 justify-center h-fit;
+
+  .wordContainer {
+    @apply relative;
+    width: clamp(19.92px, 0.3333rem + 3.3333vw, 59.77px);
+    height: clamp(24px, 0.3333rem + 3.3333vw, 72px);
+  }
+}
+
+.char {
+  @apply absolute w-fit right-0 left-0 m-auto;
+  font-size: var(--step-0);
+}

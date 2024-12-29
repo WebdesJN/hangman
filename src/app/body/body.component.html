@@ -1,0 +1,58 @@
+<main class="max-w-screen-xl mx-auto">
+  <p class="roomId">roomID: {{ roomId }}</p>
+  <div #hangmanParts class="errorState">
+    <img
+      class="first hidden"
+      src="./assets/h1.png"
+      alt="first error of the Game"
+    />
+    <img
+      class="second hidden"
+      src="./assets/h2.png"
+      alt="second error of the Game"
+    />
+    <img
+      class="third hidden"
+      src="./assets/h3.png"
+      alt="third error of the Game"
+    />
+    <img
+      class="fourth hidden"
+      src="./assets/h4.png"
+      alt="fourth error of the Game"
+    />
+    <img
+      class="fifth hidden"
+      src="./assets/h5.png"
+      alt="fifth error of the Game"
+    />
+    <img
+      class="sixth hidden"
+      src="./assets/h6.png"
+      alt="sixth error of the Game"
+    />
+  </div>
+  <div #success class="success">
+    <p class="wordContainer pt-3" *ngFor="let line of fakeArray; let i = index">
+      <span class="char placeholder"> ___ </span>
+      <ng-container *ngFor="let key of gameInfo?.state?.guessedLetters">
+        <span *ngIf="key.index === i" class="char">{{ key.key }}</span>
+      </ng-container>
+    </p>
+    <p class="w-full text-center mt-4">
+      {{ warn + winMessage ? winMessage : "" + loseMessage }}
+    </p>
+  </div>
+  <section #alphabet class="letters grid">
+    <ng-container>
+      <ng-container *ngFor="let letter of alphabetArray">
+        <button
+          [class.scratch]="gameInfo.state.keys.includes(letter)"
+          (click)="sendActionMobile(letter)"
+        >
+          {{ letter?.toUpperCase() }}
+        </button>
+      </ng-container></ng-container
+    >
+  </section>
+</main>
