@@ -8,6 +8,3 @@ Run Website:
 Run ng serve. From root directory.
 Run node index.js from /backend folder within the root directory.
 
-OR:
-
-visit https://webdesjn.de
