@@ -5,9 +5,6 @@ There are 2 versions:
 2. Versus Mode - Creating a Room with your own Word, everyone that joins can guess. Creater can not.
 
 Run Website:
-Run ng serve. From root directory.
-Run node index.js from /backend folder within the root directory.
+Run "ng serve" from root directory.
+Run "node index.js" from /backend folder within the root directory.
 
-OR:
-
-visit https://webdesjn.de
