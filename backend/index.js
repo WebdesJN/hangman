@@ -57,6 +57,79 @@ function generateRoomId() {
   return crypto.randomBytes(8).toString("hex");
 }
 
+function checkLetterInWord(roomId, key) {
+  let guessedLetters = [];
+  gameRooms[roomId].word.split("").map((letter, index) => {
+    if (key.toLowerCase() === letter.toLowerCase()) {
+      guessedLetters.push({ key: key, index: index });
+    }
+  });
+  return guessedLetters;
+}
+
+function countGuessedLetters(roomId) {
+  const failcountArr = [];
+  gameRooms[roomId]?.state?.guessedLetters?.map((letterInfo) => {
+    if (!failcountArr.includes(letterInfo.key))
+      failcountArr.push(letterInfo.key);
+  });
+  return failcountArr.length;
+}
+
+function stringifyJSON(data) {
+  //data is an object, to we need to convert it to a string.
+  //Since its too long for json.stringify, we need to convert it to a string manually
+  /*     
+  const JSONData = {
+    roomId: roomId,
+    players: gameRooms[roomId].players,
+    state: gameRooms[roomId].state,
+  };
+  */
+
+  let out = "{";
+  const keys = Object.keys(data);
+
+  for (let i = 0; i < keys.length - 1; i++) {
+    const key = keys[i];
+
+    if (key === "players") {
+      let playerArr = "[";
+      data[key].map((player, index) => {
+        let playerObj = "{";
+        const keys = Object.keys(player);
+        for (let i = 0; i < keys.length - 1; i++) {
+          const entry = [key] + ":" + data[key];
+          playerObj += JSON.stringify(entry, null, 4) + ",";
+        }
+        playerObj += "}";
+        if (index === data[key].length - 1) {
+          playerArr += playerObj;
+          playerArr += "]";
+        } else {
+          playerArr += playerObj + ",";
+        }
+      });
+      out += playerArr + ",";
+    } else {
+      const entry = key + ":" + data[key];
+      out += JSON.stringify(entry, null, 4) + ",";
+    }
+  }
+
+  // Add the last item without a trailing comma
+  if (keys.length > 0) {
+    const lastKey = keys[keys.length - 1];
+    const lastEntry = { [lastKey]: data[lastKey] };
+    out += JSON.stringify(lastEntry, null, 4);
+  }
+
+  out += "]";
+  console.log(out);
+  //out is our stringified object
+  return out;
+}
+
 // HTTP Routes
 const router = express.Router();
 
@@ -80,36 +153,27 @@ router.get("/gamerooms", (req, res) => {
 
 app.use(router);
 
-function checkLetterInWord(roomId, key) {
-  let guessedLetters = [];
-  gameRooms[roomId].word.split("").map((letter, index) => {
-    if (key.toLowerCase() === letter.toLowerCase()) {
-      guessedLetters.push({ key: key, index: index });
-    }
-  });
-  return guessedLetters;
-}
-
-function countGuessedLetters(roomId) {
-  const failcountArr = [];
-  gameRooms[roomId]?.state?.guessedLetters?.map((letterInfo) => {
-    if (!failcountArr.includes(letterInfo.key))
-      failcountArr.push(letterInfo.key);
-  });
-  return failcountArr.length;
-}
-
 // WebSocket Handlers
 wss.on("connection", (ws) => {
   ws.on("message", (request) => {
     let foundGame = false;
+    let sessionId = null;
     const data = JSON.parse(request);
-    const sessionId = data.sessionId;
+    const type = data.type;
+    const roomId = data?.roomId;
+    const username = data?.username;
+    const word = data?.word;
+    const randWord = data?.randWord;
+
+    if (!sessionId && data.sessionId) {
+      sessionId = data.sessionId;
+      ws.sessionId = sessionId;
+    }
     if (sessionId) {
       if (Object.keys(gameRooms).length === 0) {
         ws.send(
           JSON.stringify({
-            message: "You have not entered any game rooms yet!1",
+            message: "You have not entered any game rooms yet!",
           })
         );
       } else {
@@ -132,18 +196,14 @@ wss.on("connection", (ws) => {
       if (!foundGame) {
         ws.send(
           JSON.stringify({
-            message: "You have not entered any game rooms yet!2",
+            message: "You have not entered any game rooms yet!",
           })
         );
       }
     }
-    const type = data.type;
-    const roomId = data?.roomId;
-    const username = data?.username;
-    const word = data?.word;
-    const randWord = data?.randWord;
+
     if (type === "create") {
-      if (username) {
+      if (username && word) {
         //https://random-word-api.herokuapp.com/word?lang=de
         const roomId = generateRoomId();
 
@@ -152,6 +212,7 @@ wss.on("connection", (ws) => {
             keys: [],
             numbOfLettersWord: word.split("").length,
             guessedLetters: [],
+            randWord: randWord,
           }, //keys, word length,
           word: word,
           players: [
@@ -163,11 +224,12 @@ wss.on("connection", (ws) => {
             },
           ],
         };
-        if (randWord) {
+        if (gameRooms[roomId].state.randWord) {
           gameRooms[roomId].state = { ...gameRooms[roomId].state, count: 0 };
         } else {
           gameRooms[roomId].state = { ...gameRooms[roomId].state, count: 1 };
         }
+
         ws.send(
           JSON.stringify({
             roomId: roomId,
@@ -185,7 +247,9 @@ wss.on("connection", (ws) => {
         );
       } else {
         ws.send(
-          JSON.stringify({ message: "You need a username. Maybe 'Rat'?" })
+          JSON.stringify({
+            message: "You need to select a username and a Word!",
+          })
         );
       }
     } else if (type === "join") {
@@ -230,7 +294,7 @@ wss.on("connection", (ws) => {
         if (
           gameRooms[roomId].state.count === gameRooms[roomId].players.length
         ) {
-          if (!randWord) {
+          if (!gameRooms[roomId].state.randWord) {
             gameRooms[roomId].state.count = 1;
           } else {
             gameRooms[roomId].state.count = 0;
@@ -256,6 +320,7 @@ wss.on("connection", (ws) => {
           const playerWs = player[id];
           playerWs.send(
             JSON.stringify({
+              addKey: true,
               state: {
                 keys: letter,
                 guessedLetters: guessedLetters,
@@ -285,12 +350,16 @@ wss.on("connection", (ws) => {
           });
           playerWs.send(
             JSON.stringify({
+              end: true,
+              addKey: true,
               state: { guessedLetters: guessedLetters },
+              message: "you lost, Game is over!",
             })
           );
-          playerWs.close();
+          /* playerWs.close(); */
+          gameRooms[roomId].state.guessedLetters = [];
+          gameRooms[roomId].state.keys = [];
         });
-        delete gameRooms[roomId];
       } else if (
         gameRooms[roomId]?.word?.split("")?.length ===
         gameRooms[roomId]?.state?.guessedLetters?.length
@@ -301,19 +370,55 @@ wss.on("connection", (ws) => {
 
           playerWs.send(
             JSON.stringify({
+              end: true,
               type: "gameInfo",
               message: "you won, Game is over!",
             })
           );
-          delete gameRooms[roomId];
-          playerWs.close();
+          gameRooms[roomId].state.guessedLetters = [];
+          gameRooms[roomId].state.keys = [];
         });
       }
+    } else if (type === "continue") {
+      gameRooms[roomId].state.keys = [];
+      gameRooms[roomId].state.numbOfLettersWord = word.split("").length;
+      gameRooms[roomId].state.guessedLetters = [];
+      gameRooms[roomId].word = word;
+      if (gameRooms[roomId].state.randWord) {
+        gameRooms[roomId].state = { ...gameRooms[roomId].state, count: 0 };
+      } else {
+        gameRooms[roomId].state = { ...gameRooms[roomId].state, count: 1 };
+      }
+      ws.send(
+        JSON.stringify({
+          roomId: roomId,
+          players: gameRooms[roomId].players,
+          state: gameRooms[roomId].state,
+        })
+      );
+      console.log(
+        "user " +
+          username +
+          " continued a game with roomID: " +
+          roomId +
+          " at " +
+          new Date()
+      );
     }
   });
 
   ws.on("close", () => {
     console.log("A player disconnected.");
+    Object.keys(gameRooms).forEach((roomId) => {
+      gameRooms[roomId].players.map((player, index) => {
+        if (player[ws.sessionId]) {
+          gameRooms[roomId].players.splice(index, 1);
+          if (gameRooms[roomId].players.length === 0) {
+            delete gameRooms[roomId];
+          }
+        }
+      });
+    });
   });
 });
 

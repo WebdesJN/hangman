@@ -1,9 +1,12 @@
 :host(app-body) {
-  @apply flex-grow xl:max-w-[66.6666%];
+  @apply flex-grow xl:max-w-[66.6666%] xl:m-auto;
 }
 
 main {
   @apply grid grid-cols-12 gap-4 m-auto justify-items-center items-center lg:px-10;
+  &.continueState {
+    @apply opacity-40;
+  }
 }
 
 .errorState {

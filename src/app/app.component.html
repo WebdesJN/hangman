@@ -8,7 +8,8 @@
   </p>
 </section>
 <main
-  *ngIf="!showgame && sessionIdIsLoaded"
+  *ngIf="(!showgame && sessionIdIsLoaded) || continueOption"
+  [continueGameOpt]="continueOption"
   (gameRoomEntered)="enterGame($event)"
   (gameInfo)="setGameInfo($event)"
   app-join-create-room

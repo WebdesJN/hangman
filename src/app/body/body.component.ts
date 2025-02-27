@@ -32,22 +32,28 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
   };
   alphabet: string = 'abcdefghijklmnopqrstuvwxyzäöü';
   alphabetArray: string[] = this.alphabet.split('');
-  gameOver: boolean = false;
   warn: string = '';
   loseMessage: string = '';
   winMessage: string = '';
   roomId: string | null = null;
   fails: number = 0;
+  continueGame: boolean = false;
 
-  ngOnInit() {
-    this.serverCont.currentmessage.subscribe((msg) => {
+  async ngOnInit() {
+    this.serverCont?.continueOption?.subscribe((continueOption) => {
+      this.continueGame = continueOption;
+    });
+
+    this.serverCont?.currentmessage?.subscribe((msg) => {
       this.winMessage = msg;
     });
     this.roomId = this.serverCont.getRoomId();
-    this.serverCont.currentGameInfo.subscribe((info) => {
+
+    this.serverCont?.currentGameInfo?.subscribe((info) => {
       if (this.fails === 6) {
         info.state.guessedLetters.map((letter: any) => {
           this.gameInfo?.state.guessedLetters.push(letter);
+          this.loseMessage = info.message;
         });
         return;
       }
@@ -75,14 +81,32 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
       this.serverCont.setFails(this.fails);
       this.ngAfterViewInit();
     });
+
+    this.serverCont?.showHangman?.subscribe((show) => {
+      if (!show) {
+        console.log('LOL hide hangman');
+        this.warn = '';
+        this.loseMessage = '';
+        this.winMessage = '';
+        this.fails = 0;
+        this.gameInfo.state.keys = [];
+        this.hideHangman();
+      }
+    });
   }
 
   ngAfterViewInit(): void {
+    console.log('reveal?');
+    console.log(this.fails);
+
     if (this.fails === 0) {
+      console.log('NO reveal');
       return;
-    }
-    for (let i = 0; i <= this.fails - 1; i++) {
-      this.revealHangman(i);
+    } else {
+      console.log('reveal!');
+      for (let i = 0; i <= this.fails - 1; i++) {
+        this.revealHangman(i);
+      }
     }
   }
 
@@ -91,6 +115,10 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
     if (this.gameInfo && !event.ctrlKey) {
       if (!this.gameInfo.state.keys.includes(event.key)) {
         if (this.alphabetArray.includes(event.key)) {
+          if (this.continueGame) {
+            return;
+          }
+          console.log('LOL');
           const key = event.key;
           this.serverCont.getWs()?.send(
             JSON.stringify({
@@ -128,6 +156,10 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
         lastLetter = letter;
       }
     });
+    console.log('count');
+    console.log(count);
+    console.log('this.gameInfo?.state?.keys?.length');
+    console.log(this.gameInfo?.state?.keys?.length);
     return count;
   }
 
@@ -135,7 +167,16 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
     this.hangmanParts?.nativeElement.children[count].classList.remove('hidden');
   }
 
+  hideHangman() {
+    Array.from(this.hangmanParts?.nativeElement.children).forEach((element) => {
+      element.classList.add('hidden');
+      console.log(element.classList);
+      console.log('hide');
+    });
+  }
+
   ngOnDestroy(): void {
+    console.log('destroy');
     this.serverCont.getWs()!.close();
   }
 }

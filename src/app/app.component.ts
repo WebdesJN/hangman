@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { ServerConstantsService } from './services/server-constants.service';
 
 @Component({
@@ -9,6 +9,7 @@ import { ServerConstantsService } from './services/server-constants.service';
 })
 export class AppComponent implements OnInit {
   sessionIdIsLoaded: boolean = false;
+  continueOption: boolean = false;
   constructor(
     private http: HttpClient,
     private serverConst: ServerConstantsService
@@ -24,7 +25,10 @@ export class AppComponent implements OnInit {
   currentGameInfo!: any;
 
   ngOnInit(): void {
-    this.serverConst.currentGameInfo.subscribe((info) => {
+    this.serverConst?.continueOption?.subscribe((proceed) => {
+      this.continueOption = proceed;
+    });
+    this.serverConst?.currentGameInfo?.subscribe((info) => {
       if (info?.players !== undefined) {
         this.currentGameInfo = {
           ...this.currentGameInfo,
@@ -43,8 +47,8 @@ export class AppComponent implements OnInit {
       withCredentials: true,
     };
     this.http
-      .get('http://localhost:3000', httpHeaders)
-      .subscribe((res: any) => {
+      ?.get('http://localhost:3000', httpHeaders)
+      ?.subscribe((res: any) => {
         this.serverConst.setSessionId(res.sessionId);
         this.sessionIdIsLoaded = true;
       });
