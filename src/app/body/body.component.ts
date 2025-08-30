@@ -45,8 +45,10 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.serverCont?.currentmessage?.subscribe((msg) => {
+      console.log(msg);
       this.winMessage = msg;
     });
+
     this.roomId = this.serverCont.getRoomId();
 
     this.serverCont?.currentGameInfo?.subscribe((info) => {
@@ -84,7 +86,6 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.serverCont?.showHangman?.subscribe((show) => {
       if (!show) {
-        console.log('LOL hide hangman');
         this.warn = '';
         this.loseMessage = '';
         this.winMessage = '';
@@ -96,14 +97,9 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    console.log('reveal?');
-    console.log(this.fails);
-
     if (this.fails === 0) {
-      console.log('NO reveal');
       return;
     } else {
-      console.log('reveal!');
       for (let i = 0; i <= this.fails - 1; i++) {
         this.revealHangman(i);
       }
@@ -118,7 +114,6 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
           if (this.continueGame) {
             return;
           }
-          console.log('LOL');
           const key = event.key;
           this.serverCont.getWs()?.send(
             JSON.stringify({
@@ -134,6 +129,9 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   sendActionMobile(key: string) {
+    if (this.continueGame) {
+      return;
+    }
     if (!this.gameInfo.state.keys.includes(key)) {
       this.serverCont.getWs()?.send(
         JSON.stringify({
@@ -156,10 +154,6 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
         lastLetter = letter;
       }
     });
-    console.log('count');
-    console.log(count);
-    console.log('this.gameInfo?.state?.keys?.length');
-    console.log(this.gameInfo?.state?.keys?.length);
     return count;
   }
 
@@ -170,13 +164,15 @@ export class BodyComponent implements OnInit, AfterViewInit, OnDestroy {
   hideHangman() {
     Array.from(this.hangmanParts?.nativeElement.children).forEach((element) => {
       element.classList.add('hidden');
-      console.log(element.classList);
-      console.log('hide');
     });
   }
 
+  leave() {
+    this.serverCont.getWs()!.close();
+    window.location.reload();
+  }
+
   ngOnDestroy(): void {
-    console.log('destroy');
     this.serverCont.getWs()!.close();
   }
 }

@@ -1,4 +1,5 @@
 <main class="max-w-screen-xl mx-auto" [class.continueState]="continueGame">
+  <a class="leave" (click)="leave()">Leave Game</a>
   <p class="roomId">roomID: {{ roomId }}</p>
   <div #hangmanParts class="errorState">
     <img

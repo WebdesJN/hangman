@@ -22,8 +22,8 @@ import { ServerConstantsService } from '../services/server-constants.service';
 })
 export class JoinCreateRoomComponent implements OnInit {
   currentGameInfo: any;
-  currentMessage: string = '';
   continueOption: boolean = false;
+  infoMessage: string | null = null;
   constructor(
     private http: HttpClient,
     private serverConstant: ServerConstantsService
@@ -53,14 +53,13 @@ export class JoinCreateRoomComponent implements OnInit {
     }
     this.sessionId = this.serverConstant.getSessionId();
 
+    this.serverConstant?.currentmessage?.subscribe((msg) => {
+      this.infoMessage = msg;
+    });
+
     this.serverConstant?.continueOption?.subscribe((proceed) => {
       this.continueOption = proceed;
     });
-
-    // Wait for the current message to be fetched
-    this.currentMessage = await lastValueFrom(
-      this.serverConstant.currentmessage
-    );
 
     // Wait for the current game info to be fetched
     this.currentGameInfo = await lastValueFrom(
@@ -82,15 +81,15 @@ export class JoinCreateRoomComponent implements OnInit {
         const word = res[0];
 
         const translationRes = await lastValueFrom(
-          http.get<any>(
-            `https://api-free.deepl.com/v2/translate?auth_key=dbc5f054-b4f3-e6d4-b4ed-571ebc2f473c:fx&text=${word}&target_lang=DE`
+          http.get<{ translations: { text: string }[] }>(
+            'http://localhost:3000/translate/' + word
           )
         );
 
         let translatedWord = translationRes.translations[0].text;
 
         if (translatedWord.includes('.')) {
-          translatedWord = translatedWord.split('.')[0] || null;
+          translatedWord = translatedWord.split('.')[0] || '';
         }
         if (
           translatedWord.includes('ß') ||
@@ -114,7 +113,6 @@ export class JoinCreateRoomComponent implements OnInit {
 
   async showContinueGameOpt() {
     this.serverConstant.showContinueOption();
-    this.serverConstant.hideHangman();
 
     const currentState: any = await lastValueFrom(this.currentGameInfo);
 
@@ -183,6 +181,7 @@ export class JoinCreateRoomComponent implements OnInit {
       return;
     }
     if (this.ws?.readyState === WebSocket.OPEN) {
+      this.serverConstant.setMessage('');
       this.serverConstant.setRoomId(this.roomId!);
       this.ws.send(
         JSON.stringify({
@@ -198,11 +197,13 @@ export class JoinCreateRoomComponent implements OnInit {
     }
   }
 
-  createRoom() {
+  async createRoom() {
     if (this.word && this.username) {
       // Ensure the WebSocket is open before sending a message
       if (this.ws?.readyState === WebSocket.OPEN) {
         if (this.randomWordSelected) {
+          console.log('Random word selected');
+          this.serverConstant.setMessage('');
           this.ws?.send(
             JSON.stringify({
               type: 'create',
@@ -212,11 +213,14 @@ export class JoinCreateRoomComponent implements OnInit {
               randWord: true,
             })
           );
-          this.serverConstant.setMessage('');
         } else if (!this.username || !this.word) {
-          this.serverConstant.setMessage('Username and word are required!');
+          this.serverConstant.setMessage(
+            'Username and Hangman-Word are required!'
+          );
           return;
         } else {
+          console.log('Random not word selected');
+          this.serverConstant.setMessage('');
           this.ws.send(
             JSON.stringify({
               type: 'create',
@@ -226,7 +230,6 @@ export class JoinCreateRoomComponent implements OnInit {
               randWord: false,
             })
           );
-          this.serverConstant.setMessage('');
         }
       } else {
         console.error('WebSocket is not open. Attempting to reconnect...');
@@ -240,9 +243,8 @@ export class JoinCreateRoomComponent implements OnInit {
   }
 
   continueGame() {
+    this.serverConstant.hideHangman();
     this.serverConstant.hideContinueOption();
-    console.log('this.randomWordSelected');
-    console.log(this.randomWordSelected);
     if (!this.word) {
       this.serverConstant.setMessage('Username and word are required!');
       return;
@@ -266,7 +268,6 @@ export class JoinCreateRoomComponent implements OnInit {
         )
     );
   }
-
   randomWordselection() {
     this.randomWordSelected = !this.randomWordSelected;
     this.http
@@ -274,11 +275,7 @@ export class JoinCreateRoomComponent implements OnInit {
       .subscribe((res) => {
         const word = res as Array<string>;
         this.http
-          .get(
-            'https://api-free.deepl.com/v2/translate?auth_key=dbc5f054-b4f3-e6d4-b4ed-571ebc2f473c:fx&text=' +
-              word[0] +
-              '&target_lang=DE'
-          )
+          .get('http://localhost:3000/translate/' + word[0])
           .subscribe((res: any) => {
             this.word = res.translations[0].text;
           });

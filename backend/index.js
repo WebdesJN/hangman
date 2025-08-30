@@ -3,23 +3,24 @@ const session = require("express-session");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const SQLiteStore = require("connect-sqlite3")(session);
-const http = require("http");
+const HTTPS = require("http");
 const WebSocket = require("ws");
 const crypto = require("crypto");
 const port = "3000";
 const fs = require("fs");
+const axios = require("axios");
 /* const privateKey = fs.readFileSync(
-  "/volume1/web/wichtelSecureSSLProof/privkey.pem",
+  "/volume1/web/wichtelSecureSSLProof/eu/privkey.pem",
   "utf8"
 );
 const certificate = fs.readFileSync(
-  "/volume1/web/wichtelSecureSSLProof/fullchain.pem",
+  "/volume1/web/wichtelSecureSSLProof/eu/chain.pem",
   "utf8"
 ); */
 
 /* const credentials = { key: privateKey, cert: certificate }; */
 const app = express();
-const server = http.createServer(app);
+const server = HTTPS.createServer(app /*, credentials */);
 const wss = new WebSocket.Server({ server });
 
 const gameRooms = {};
@@ -39,8 +40,8 @@ app.use(
     cookie: {
       path: "/",
       httpOnly: true,
-      secure: true, // Nur über HTTPS ausliefern
-      sameSite: "Strict", // Verhindert Third-Party-Zugriffe
+      secure: false, // Nur über HTTPS ausliefern
+      //sameSite: "Strict",  Verhindert Third-Party-Zugriffe
       maxAge: null,
     },
   })
@@ -76,6 +77,7 @@ function countGuessedLetters(roomId) {
   return failcountArr.length;
 }
 
+/* 
 function stringifyJSON(data) {
   //data is an object, to we need to convert it to a string.
   //Since its too long for json.stringify, we need to convert it to a string manually
@@ -85,7 +87,7 @@ function stringifyJSON(data) {
     players: gameRooms[roomId].players,
     state: gameRooms[roomId].state,
   };
-  */
+  
 
   let out = "{";
   const keys = Object.keys(data);
@@ -128,7 +130,7 @@ function stringifyJSON(data) {
   console.log(out);
   //out is our stringified object
   return out;
-}
+} */
 
 // HTTP Routes
 const router = express.Router();
@@ -146,6 +148,25 @@ router.get("/", (req, res) => {
     res.send({ message: 'Session destroyed. <a href="/">Go back</a>' });
   });
 }); */
+
+app.get("/translate/:word", async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://api-free.deepl.com/v2/translate",
+      {
+        params: {
+          auth_key: "dbc5f054-b4f3-e6d4-b4ed-571ebc2f473c:fx",
+          text: req.params.word,
+          target_lang: "DE",
+        },
+      }
+    );
+    res.json(response.data); // send back to Angular
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Translation failed");
+  }
+});
 
 router.get("/gamerooms", (req, res) => {
   res.send(gameRooms);
@@ -173,7 +194,7 @@ wss.on("connection", (ws) => {
       if (Object.keys(gameRooms).length === 0) {
         ws.send(
           JSON.stringify({
-            message: "You have not entered any game rooms yet!",
+            message: "You have not entered any game rooms yeti!",
           })
         );
       } else {

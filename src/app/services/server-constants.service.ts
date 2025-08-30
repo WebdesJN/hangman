@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
-
+import { BehaviorSubject, lastValueFrom } from 'rxjs';
 @Injectable({
   providedIn: 'root',
 })
@@ -27,7 +26,6 @@ export class ServerConstantsService {
   }
 
   getWs() {
-    console.log('getWs', this.ws);
     return this.ws;
   }
 

@@ -10,7 +10,7 @@ main {
 }
 
 .errorState {
-  @apply relative col-span-12 row-span-3 lg:col-start-8 lg:col-end-13 lg:row-start-1 lg:row-end-2 h-[294px] w-[285px] self-start;
+  @apply relative col-span-12 row-span-3 lg:col-start-8 lg:col-end-13 lg:row-start-2 lg:row-end-3 h-[294px] w-[285px] self-start;
   img {
     &.first {
       @apply z-10 absolute;
@@ -34,7 +34,7 @@ main {
 }
 
 .letters {
-  @apply self-start lg:grid-cols-11 lg:grid-rows-3 grid-cols-8 col-span-12 row-start-1 row-end-2 lg:col-start-1 lg:col-end-7 m-auto w-full px-2;
+  @apply self-start lg:grid-cols-11 lg:grid-rows-3 grid-cols-8 col-span-12 row-start-2 row-end-3 lg:col-start-1 lg:col-end-7 m-auto w-full px-2;
   button {
     @apply sm:px-5 w-full text-center;
     font-size: var(--step-1);
@@ -49,17 +49,21 @@ main {
 }
 
 .roomId {
-  @apply col-span-12 h-fit row-start-3 row-end-4 self-start;
+  @apply col-span-12 h-fit row-start-4 row-end-5 self-start;
 }
 
 .success {
-  @apply col-span-12 row-start-2 row-end-3 flex flex-wrap gap-2 md:gap-5 w-11/12 justify-center h-fit;
+  @apply col-span-12 row-start-3 row-end-4 flex flex-wrap gap-2 md:gap-5 w-11/12 justify-center h-fit;
 
   .wordContainer {
     @apply relative;
     width: clamp(19.92px, 0.3333rem + 3.3333vw, 59.77px);
     height: clamp(24px, 0.3333rem + 3.3333vw, 72px);
   }
+}
+
+.leave {
+  @apply row-start-1 col-start-1 p-2;
 }
 
 .char {
